@@ -1,0 +1,52 @@
+graph TB
+    subgraph "Frontend - React + Tailwind"
+        UI[User Interface]
+        Upload[Upload Component]
+        Query[Query Component]
+        Results[Results Display]
+    end
+    
+    subgraph "Backend - FastAPI"
+        API[REST API Endpoints]
+        DocProcessor[Document Processor]
+        VectorSearch[Vector Search Engine]
+        RAG[RAG Pipeline]
+    end
+    
+    subgraph "Storage"
+        ChromaDB[(ChromaDB<br/>Vector Database)]
+        FileStorage[File Storage]
+    end
+    
+    subgraph "External Services"
+        OpenAI[OpenAI API<br/>Embeddings + GPT]
+    end
+    
+    UI --> Upload
+    UI --> Query
+    UI --> Results
+    
+    Upload -->|POST /upload| API
+    Query -->|POST /query| API
+    API -->|GET /documents| Results
+    
+    API --> DocProcessor
+    API --> VectorSearch
+    API --> RAG
+    
+    DocProcessor -->|Extract & Chunk| FileStorage
+    DocProcessor -->|Generate Embeddings| OpenAI
+    DocProcessor -->|Store Vectors| ChromaDB
+    
+    VectorSearch -->|Query Embedding| OpenAI
+    VectorSearch -->|Similarity Search| ChromaDB
+    VectorSearch -->|Top-K Chunks| RAG
+    
+    RAG -->|Context + Question| OpenAI
+    RAG -->|Answer + Sources| API
+    
+    style UI fill:#4F46E5,stroke:#312E81,color:#fff
+    style API fill:#059669,stroke:#065F46,color:#fff
+    style ChromaDB fill:#DC2626,stroke:#991B1B,color:#fff
+    style OpenAI fill:#F59E0B,stroke:#B45309,color:#fff
+    style RAG fill:#8B5CF6,stroke:#5B21B6,color:#fff
