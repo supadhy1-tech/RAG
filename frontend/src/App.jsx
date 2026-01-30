@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Upload, Send, FileText, Trash2, AlertCircle, CheckCircle, Clock, TrendingUp } from 'lucide-react';
 
-const API_URL = 'http://localhost:8000';
+const API_URL = 'https://rag-ma0i.onrender.com';
 
 export default function RAGDocumentAssistant() {
   const [documents, setDocuments] = useState([]);
