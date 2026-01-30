@@ -53,7 +53,7 @@ except:
     )
 # OpenAI Configuration
 OPENAI_API_KEY = os.getenv("OPENAI_API_KEY", "")
-print(OPENAI_API_KEY)
+
 
 if OPENAI_API_KEY:
     openai.api_key = OPENAI_API_KEY
