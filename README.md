@@ -9,18 +9,18 @@ Built with FastAPI, ChromaDB, OpenAI, and React. Upload PDFs, ask questions, get
 ![React](https://img.shields.io/badge/react-18.2-blue)
 ![License](https://img.shields.io/badge/license-MIT-green)
 
-## ✨ Features
+##  Features
 
-- **📄 PDF Processing**: Upload and process PDF documents with automatic text extraction
-- **🧠 Smart Chunking**: Intelligent text segmentation with context preservation
-- **🔍 Semantic Search**: ChromaDB vector database for accurate retrieval
-- **💬 AI Responses**: GPT-powered answers with source citations
-- **⚡ Fast Performance**: Sub-2-second query response times
-- **📊 Confidence Scoring**: Relevance metrics for answer quality
-- **🎨 Beautiful UI**: Modern, responsive React interface
-- **🔒 Production Ready**: Error handling, logging, health checks
+- ** PDF Processing**: Upload and process PDF documents with automatic text extraction
+- ** Smart Chunking**: Intelligent text segmentation with context preservation
+- ** Semantic Search**: ChromaDB vector database for accurate retrieval
+- ** AI Responses**: GPT-powered answers with source citations
+- ** Fast Performance**: Sub-2-second query response times
+- ** Confidence Scoring**: Relevance metrics for answer quality
+- ** Beautiful UI**: Modern, responsive React interface
+- ** Production Ready**: Error handling, logging, health checks
 
-## 🏗️ Architecture
+##  Architecture
 
 ```
 User Query
@@ -97,7 +97,7 @@ npm run dev
 
 Frontend will run on `http://localhost:3000`
 
-## 📖 Usage
+##  Usage
 
 ### Using the Web Interface
 
@@ -195,34 +195,6 @@ cd frontend
 vercel
 ```
 
-**Backend (Railway):**
-1. Install Railway CLI: `npm install -g @railway/cli`
-2. Login: `railway login`
-3. Deploy: `railway up`
-4. Add environment variables in Railway dashboard
-
-### Option 3: Hugging Face Spaces
-
-Create two Spaces:
-1. Backend: Gradio or FastAPI Space
-2. Frontend: Static Space
-
-Update API_URL accordingly.
-
-### Option 4: Docker
-
-```bash
-# Backend
-cd backend
-docker build -t rag-backend .
-docker run -p 8000:8000 -e OPENAI_API_KEY=your_key rag-backend
-
-# Frontend
-cd frontend
-docker build -t rag-frontend .
-docker run -p 3000:3000 rag-frontend
-```
-
 ## 📁 Project Structure
 
 ```
@@ -246,27 +218,7 @@ rag-document-assistant/
 └── README.md               # This file
 ```
 
-## 🎯 For Job Applications
-
-### Key Technical Highlights
-
-1. **Production Architecture**: FastAPI with async/await, proper error handling
-2. **Vector Search**: Semantic search with ChromaDB and embeddings
-3. **RAG Implementation**: Retrieval + Generation pipeline
-4. **Modern Frontend**: React hooks, Tailwind CSS, responsive design
-5. **API Design**: RESTful endpoints with proper HTTP methods
-6. **Performance Optimization**: Response time tracking, confidence scoring
-7. **Deployment Ready**: Environment configuration, health checks
-
-### Interview Talking Points
-
-- **Why RAG over fine-tuning?** Cost-effective, dynamic knowledge base, no retraining needed
-- **Chunk strategy trade-offs**: Smaller chunks = more precise, larger chunks = more context
-- **Vector DB choice**: ChromaDB for simplicity, but could scale to Pinecone/Weaviate
-- **Error handling**: Graceful fallbacks, informative error messages
-- **Future improvements**: Caching, batch processing, multi-language support
-
-## 🔍 Technical Deep Dive
+##  Technical Deep Dive
 
 ### How It Works
 
@@ -296,7 +248,7 @@ rag-document-assistant/
 - **Documentation** with docstrings
 - **Validation** with Pydantic models
 
-## 🛠️ Customization
+##  Customization
 
 ### Add More File Types
 
@@ -327,7 +279,7 @@ Install: `pip install python-jose[cryptography] passlib[bcrypt]`
 
 Add JWT middleware to FastAPI routes.
 
-## 🐛 Troubleshooting
+##  Troubleshooting
 
 **Issue**: "OpenAI API key not configured"
 **Fix**: Set `OPENAI_API_KEY` in `.env` file
@@ -341,7 +293,7 @@ Add JWT middleware to FastAPI routes.
 **Issue**: Out of memory
 **Fix**: Reduce chunk size or implement pagination
 
-## 📈 Performance Optimization
+##  Performance Optimization
 
 1. **Caching**: Add Redis for frequently asked questions
 2. **Batch Processing**: Process multiple PDFs concurrently
@@ -349,7 +301,7 @@ Add JWT middleware to FastAPI routes.
 4. **CDN**: Serve frontend assets from CDN
 5. **Load Balancing**: Deploy multiple backend instances
 
-## 🤝 Contributing
+##  Contributing
 
 PRs welcome! Areas for improvement:
 - [ ] Multi-language support
@@ -358,11 +310,11 @@ PRs welcome! Areas for improvement:
 - [ ] Document comparison
 - [ ] Export chat history
 
-## 📄 License
+##  License
 
 MIT License - see LICENSE file
 
-## 🙏 Acknowledgments
+##  Acknowledgments
 
 - FastAPI for the excellent web framework
 - ChromaDB for vector database
