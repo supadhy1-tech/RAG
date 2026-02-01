@@ -10,7 +10,7 @@ import chromadb
 from chromadb.config import Settings
 from openai import OpenAI
 import os
-from typing import List, Optional
+from typing import List
 import PyPDF2
 import io
 import hashlib
@@ -19,6 +19,7 @@ import logging
 from dotenv import load_dotenv
 
 load_dotenv()
+
 # Configure logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -40,7 +41,6 @@ app.add_middleware(
 )
 
 # Initialize ChromaDB
-# Initialize ChromaDB (new API)
 chroma_client = chromadb.PersistentClient(path="./chroma_db")
 
 # Create or get collection
@@ -51,23 +51,22 @@ except:
         name="documents",
         metadata={"hnsw:space": "cosine"}
     )
+
 # OpenAI Configuration
 OPENAI_API_KEY = os.getenv("OPENAI_API_KEY", "")
-
-
 client = OpenAI(api_key=OPENAI_API_KEY)
 
 # Pydantic models
 class QueryRequest(BaseModel):
     question: str
     top_k: int = 3
-    
+
 class QueryResponse(BaseModel):
     answer: str
     sources: List[dict]
     confidence: float
     latency_ms: float
-    
+
 class DocumentInfo(BaseModel):
     id: str
     filename: str
@@ -92,22 +91,22 @@ def chunk_text(text: str, chunk_size: int = 1000, overlap: int = 200) -> List[st
     chunks = []
     start = 0
     text_length = len(text)
-    
+
     while start < text_length:
         end = start + chunk_size
         chunk = text[start:end]
-        
+
         # Try to break at sentence boundary
         if end < text_length:
             last_period = chunk.rfind('.')
-            if last_period > chunk_size * 0.5:  # Only if we're not cutting too much
+            if last_period > chunk_size * 0.5:
                 chunk = chunk[:last_period + 1]
                 end = start + last_period + 1
-        
+
         chunks.append(chunk.strip())
         start = end - overlap
-    
-    return [c for c in chunks if len(c.strip()) > 50]  # Filter very small chunks
+
+    return [c for c in chunks if len(c.strip()) > 50]
 
 def generate_doc_id(filename: str, content: bytes) -> str:
     """Generate unique document ID"""
@@ -117,40 +116,28 @@ def generate_doc_id(filename: str, content: bytes) -> str:
 # API Endpoints
 @app.get("/")
 async def root():
-    return {
-        "message": "RAG Document Assistant API",
-        "version": "1.0.0",
-        "status": "operational"
-    }
+    return {"message": "RAG Document Assistant API", "version": "1.0.0", "status": "operational"}
 
 @app.post("/upload", response_model=DocumentInfo)
 async def upload_document(file: UploadFile = File(...)):
     """Upload and process a document"""
     start_time = datetime.now()
-    
-    # Validate file type
-    if not file.filename.endswith('.pdf'):
+
+    if not file.filename.endswith(".pdf"):
         raise HTTPException(status_code=400, detail="Only PDF files are supported")
-    
+
     try:
-        # Read file content
         content = await file.read()
-        
-        # Generate document ID
         doc_id = generate_doc_id(file.filename, content)
-        
-        # Extract text
         logger.info(f"Extracting text from {file.filename}")
         text = extract_text_from_pdf(content)
-        
+
         if not text.strip():
             raise HTTPException(status_code=400, detail="No text found in PDF")
-        
-        # Chunk text
+
         logger.info(f"Chunking text from {file.filename}")
         chunks = chunk_text(text)
-        
-        # Store in ChromaDB
+
         logger.info(f"Storing {len(chunks)} chunks in database")
         collection.add(
             documents=chunks,
@@ -163,17 +150,17 @@ async def upload_document(file: UploadFile = File(...)):
                 "upload_time": datetime.now().isoformat()
             } for i in range(len(chunks))]
         )
-        
+
         elapsed = (datetime.now() - start_time).total_seconds() * 1000
         logger.info(f"Document processed in {elapsed:.2f}ms")
-        
+
         return DocumentInfo(
             id=doc_id,
             filename=file.filename,
             upload_time=datetime.now().isoformat(),
-            chunk_count=len(chunks)
+            chunk_count=len(chunks),
         )
-        
+
     except HTTPException:
         raise
     except Exception as e:
@@ -184,49 +171,41 @@ async def upload_document(file: UploadFile = File(...)):
 async def query_documents(request: QueryRequest):
     """Query documents using RAG"""
     start_time = datetime.now()
-    
+
     if not OPENAI_API_KEY:
         raise HTTPException(
-            status_code=500, 
-            detail="OpenAI API key not configured. Set OPENAI_API_KEY environment variable."
+            status_code=500,
+            detail="OpenAI API key not configured. Set OPENAI_API_KEY environment variable.",
         )
-    
+
     try:
-        # Retrieve relevant chunks
         logger.info(f"Searching for: {request.question}")
-        results = collection.query(
-            query_texts=[request.question],
-            n_results=request.top_k
-        )
-        
+        results = collection.query(query_texts=[request.question], n_results=request.top_k)
+
         if not results['documents'][0]:
             return QueryResponse(
-                answer="I couldn't find any relevant information in the uploaded documents. Please make sure you've uploaded documents first.",
+                answer="I couldn't find any relevant information in the uploaded documents.",
                 sources=[],
                 confidence=0.0,
-                latency_ms=(datetime.now() - start_time).total_seconds() * 1000
+                latency_ms=(datetime.now() - start_time).total_seconds() * 1000,
             )
-        
-        # Prepare context
+
         context_chunks = results['documents'][0]
         sources = []
-        for i, (chunk, metadata, distance) in enumerate(zip(
-            context_chunks, 
-            results['metadatas'][0],
-            results['distances'][0]
-        )):
+        for i, (chunk, metadata, distance) in enumerate(
+            zip(context_chunks, results['metadatas'][0], results['distances'][0])
+        ):
             sources.append({
                 "chunk": chunk[:200] + "..." if len(chunk) > 200 else chunk,
-                "filename": metadata.get('filename', 'Unknown'),
-                "relevance": float(1 - distance)  # Convert distance to similarity
+                "filename": metadata.get("filename", "Unknown"),
+                "relevance": float(1 - distance),
             })
-        
+
         context = "\n\n".join([f"[Source {i+1}]: {chunk}" for i, chunk in enumerate(context_chunks)])
-        
-        # Generate answer with OpenAI
+
         logger.info("Generating answer with GPT")
         system_prompt = """You are a helpful AI assistant that answers questions based on provided document excerpts.
-        
+
 Rules:
 - Only use information from the provided sources
 - If the sources don't contain enough information, say so clearly
@@ -242,32 +221,32 @@ Question: {request.question}
 
 Please provide a clear, accurate answer based on the context above."""
 
-response = client.chat.completions.create(
-    model="gpt-4o-mini",
-    messages=[
-        {"role": "system", "content": system_prompt},
-        {"role": "user", "content": user_prompt}
-    ],
-    temperature=0.3,
-    max_tokens=500
-)
+        # ✅ New OpenAI v1 API call
+        response = client.chat.completions.create(
+            model="gpt-4o-mini",
+            messages=[
+                {"role": "system", "content": system_prompt},
+                {"role": "user", "content": user_prompt},
+            ],
+            temperature=0.3,
+            max_tokens=500,
+        )
 
-answer = response.choices[0].message.content
-        
-        # Calculate confidence (simple heuristic based on source relevance)
-        avg_relevance = sum(s['relevance'] for s in sources) / len(sources)
-        confidence = min(avg_relevance * 1.2, 1.0)  # Scale up slightly, cap at 1.0
-        
+        answer = response.choices[0].message.content
+
+        avg_relevance = sum(s["relevance"] for s in sources) / len(sources)
+        confidence = min(avg_relevance * 1.2, 1.0)
+
         elapsed = (datetime.now() - start_time).total_seconds() * 1000
         logger.info(f"Query completed in {elapsed:.2f}ms")
-        
+
         return QueryResponse(
             answer=answer,
             sources=sources,
             confidence=confidence,
-            latency_ms=elapsed
+            latency_ms=elapsed,
         )
-        
+
     except Exception as e:
         logger.error(f"Error querying documents: {e}")
         raise HTTPException(status_code=500, detail=f"Failed to query documents: {str(e)}")
@@ -276,22 +255,18 @@ answer = response.choices[0].message.content
 async def list_documents():
     """List all uploaded documents"""
     try:
-        # Get all documents from collection
         all_data = collection.get()
-        
-        # Group by document
         docs = {}
         for metadata in all_data['metadatas']:
-            doc_id = metadata.get('doc_id')
+            doc_id = metadata.get("doc_id")
             if doc_id not in docs:
                 docs[doc_id] = {
-                    'id': doc_id,
-                    'filename': metadata.get('filename'),
-                    'upload_time': metadata.get('upload_time'),
-                    'chunk_count': 0
+                    "id": doc_id,
+                    "filename": metadata.get("filename"),
+                    "upload_time": metadata.get("upload_time"),
+                    "chunk_count": 0,
                 }
-            docs[doc_id]['chunk_count'] += 1
-        
+            docs[doc_id]["chunk_count"] += 1
         return list(docs.values())
     except Exception as e:
         logger.error(f"Error listing documents: {e}")
@@ -301,18 +276,14 @@ async def list_documents():
 async def delete_document(doc_id: str):
     """Delete a document and all its chunks"""
     try:
-        # Get all chunk IDs for this document
-        results = collection.get(
-            where={"doc_id": doc_id}
-        )
-        
+        results = collection.get(where={"doc_id": doc_id})
+
         if not results['ids']:
             raise HTTPException(status_code=404, detail="Document not found")
-        
-        # Delete all chunks
+
         collection.delete(ids=results['ids'])
-        
         return {"message": f"Deleted document {doc_id} and {len(results['ids'])} chunks"}
+
     except HTTPException:
         raise
     except Exception as e:
@@ -326,7 +297,7 @@ async def health_check():
         "status": "healthy",
         "timestamp": datetime.now().isoformat(),
         "openai_configured": bool(OPENAI_API_KEY),
-        "documents_count": len(collection.get()['ids'])
+        "documents_count": len(collection.get()['ids']),
     }
 
 if __name__ == "__main__":
