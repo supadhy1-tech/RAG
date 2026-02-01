@@ -321,14 +321,7 @@ MIT License - see LICENSE file
 - OpenAI for embeddings and LLM
 - React community for frontend tools
 
-## 📧 Contact
 
-Questions? Reach out:
-- GitHub: [@yourusername](https://github.com/yourusername)
-- LinkedIn: [Your Name](https://linkedin.com/in/yourprofile)
-- Email: your.email@example.com
-
----
 
 **⭐ Star this repo if it helped you land a job!**
 
