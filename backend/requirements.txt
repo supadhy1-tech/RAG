@@ -1,8 +1,33 @@
+# Core dependencies
 fastapi==0.109.0
 uvicorn[standard]==0.27.0
-python-dotenv==1.0.0
-chromadb==0.4.22
-openai>=1.0.0
-PyPDF2==3.0.1
 python-multipart==0.0.9
-numpy<2.0.0
+pydantic==2.5.3
+
+# Vector database
+chromadb==0.4.22
+
+# LLM API
+openai>1.0.0
+
+# File processing - PDF
+PyPDF2==3.0.1
+
+# File processing - Word documents
+python-docx==1.1.0
+
+# File processing - Excel
+pandas==2.1.4
+openpyxl==3.1.2
+xlrd==2.0.1
+
+# File processing - HTML/Markdown
+beautifulsoup4==4.12.3
+markdown==3.5.2
+lxml==5.1.0
+
+# Environment variables
+python-dotenv==1.0.0
+
+# Logging and utilities
+typing-extensions==4.9.0
