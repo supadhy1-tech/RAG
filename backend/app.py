@@ -8,7 +8,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 import chromadb
 from chromadb.config import Settings
-import openai
+from openai import OpenAI
 import os
 from typing import List, Optional
 import PyPDF2
@@ -55,8 +55,7 @@ except:
 OPENAI_API_KEY = os.getenv("OPENAI_API_KEY", "")
 
 
-if OPENAI_API_KEY:
-    openai.api_key = OPENAI_API_KEY
+client = OpenAI(api_key=OPENAI_API_KEY)
 
 # Pydantic models
 class QueryRequest(BaseModel):
@@ -243,16 +242,16 @@ Question: {request.question}
 
 Please provide a clear, accurate answer based on the context above."""
 
-        response = openai.ChatCompletion.create(
-            model="gpt-4o-mini",
-            messages=[
-                {"role": "system", "content": system_prompt},
-                {"role": "user", "content": user_prompt}
-            ],
-            temperature=0.3,
-            max_tokens=500
-        )
-        
+  response = client.chat.completions.create(
+      model="gpt-4o-mini",
+    messages=[
+        {"role": "system", "content": system_prompt},
+        {"role": "user", "content": user_prompt}
+    ],
+    temperature=0.3,
+    max_tokens=500
+)
+
         answer = response.choices[0].message.content
         
         # Calculate confidence (simple heuristic based on source relevance)
