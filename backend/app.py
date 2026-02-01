@@ -242,8 +242,8 @@ Question: {request.question}
 
 Please provide a clear, accurate answer based on the context above."""
 
-  response = client.chat.completions.create(
-      model="gpt-4o-mini",
+response = client.chat.completions.create(
+    model="gpt-4o-mini",
     messages=[
         {"role": "system", "content": system_prompt},
         {"role": "user", "content": user_prompt}
@@ -252,7 +252,7 @@ Please provide a clear, accurate answer based on the context above."""
     max_tokens=500
 )
 
-        answer = response.choices[0].message.content
+answer = response.choices[0].message.content
         
         # Calculate confidence (simple heuristic based on source relevance)
         avg_relevance = sum(s['relevance'] for s in sources) / len(sources)
